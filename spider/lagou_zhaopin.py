@@ -66,8 +66,8 @@ def li_to_tu(li):
 	return ll
 
 
-def main():
-	lang_name = raw_input('职位名: ')
+def main(lang_name):
+	#lang_name = raw_input('职位名: ')
 	page = 1
 	url = 'http://www.lagou.com/jobs/positionAjax.json?needAddtionalResult=false'  # 城市 city=成都&needAddtionalResult=false
 	info_result = []
@@ -84,6 +84,7 @@ def main():
 	            u'工作性质', u'行业类别', u'公司财务类型', u'公司标签', u'公司规模'])
 	for row in info_result:
 		ws1.append(row)
+
 	wb.save(down_path + down_file) #excel保存
 
 
