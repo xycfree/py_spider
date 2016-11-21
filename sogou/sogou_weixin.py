@@ -63,6 +63,7 @@ class Sogou_Wechat(Sogou):
                     text = self.get_text(i.find('div', class_="txt-box").find('a').get('href'))
                     info.append(text) #详情
                     print('info:{}'.format(info))
+
                     #多线程
                     result = self.mysql_insert(info)
 
