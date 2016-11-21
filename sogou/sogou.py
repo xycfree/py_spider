@@ -23,3 +23,4 @@ class Sogou(object):
         r = requests.get(url, params=kwargs, timeout=6).content
         soup = BeautifulSoup(r, 'lxml')
         return soup
+
