@@ -12,6 +12,8 @@ import tornado.options
 from tornado.options import options,define
 from lagou_info import Lagou_info
 from job51 import Job51_info
+from sogou import sogou_weixin,sogou_zhihu
+import json
 
 define('port', default=8000, type=int)
 
@@ -27,13 +29,9 @@ class MainHandler(tornado.web.RequestHandler):
         self.url = lagou.get_company_url(self.company_name)
         self.soup, self.company_id, self.comp_data = lagou.get_company_info(self.url)
         self.basic_info = lagou.get_comp_basic_info(self.soup)
-
         for key in self.basic_info.keys():
-            self.write('{0} : {1}    '.format(key,self.basic_info[key]) )
+            self.write('{0} : {1} '.format(key,self.basic_info[key]))
 
-# application = tornado.web.Application([
-#     (r"/",MainHandler),
-# ])
 
 
 class IndexHandlers(tornado.web.RequestHandler):
@@ -57,9 +55,34 @@ class IndexHandlers(tornado.web.RequestHandler):
         else:
             self.write(args + 'success')
 
+# application = tornado.web.Application([
+#     (r"/",MainHandler),
+# ])
+
+class WechatHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.query = self.get_argument('query', '启迪金控')
+        self.page = self.get_argument('page', '1')
+        self.time = self.get_argument('time', '0')
+        self.site = self.get_argument('site', '100')
+        self.wx = sogou_weixin.Sogou_Wechat()
+        count, result = self.wx.get_html_info(self.query, self.page, self.time, self.site)
+        result = json.loads(result)
+        for i in result:
+            print(isinstance(i, dict))
+            print(type(i))
+            if isinstance(i, dict):
+                for k, v in i.items():
+                    self.write('{0} : {1} \n'.format(k, v))
+            else:
+                self.write(i)
+
+
 if __name__=="__main__":
     tornado.options.parse_command_line() #解析
-    app = tornado.web.Application(handlers=[(r'/',MainHandler),(r'/comp',IndexHandlers)])
+    app = tornado.web.Application(handlers=[(r'/', MainHandler),
+                                            (r'/comp', IndexHandlers),
+                                            (r'/wx', WechatHandler)])
     http_server = tornado.httpserver.HTTPServer(app)
     http_server.listen(options.port)
     #application.listen(8888)

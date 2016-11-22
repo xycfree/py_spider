@@ -9,13 +9,17 @@ from db_config import mysql_conn
 import sys
 from sogou import Sogou
 import json
-#from queue import Consumer, Producer
+
+# from queue import Consumer, Producer
 reload(sys)
 sys.setdefaultencoding('utf-8')
+
 
 class Sogou_Wechat(Sogou):
     def __init__(self):
         super(Sogou_Wechat, self).__init__()
+        self.sourceid = ('inttime_all', 'inttime_day', 'inttime_week', 'inttime_month', 'inttime_year')
+        self.tsn = (0, 1, 2, 3, 4)
         self.data = {
             'type': 2,
             # 'query': "广发银行",
@@ -29,39 +33,41 @@ class Sogou_Wechat(Sogou):
             self.info = info
             self.count = count
             page = count / 10 + 1 if count % 10 else count / 10
-            for i in range(2, page+1):
+            for i in range(2, page + 1):
                 pass
         else:
             print('无数据')
 
-    def get_html_info(self, query, page=1):
+    def get_html_info(self, query, page=1, time=0, site=100):
         '''
         :param query: 搜索的关键词
         :return: 返回第一页数据，总数据条数
         '''
-
         self.data['query'] = '"' + query + '"'  # 搜索的关键词，""不拆分关键词搜索
         self.data['page'] = page
-        # self.data['sourceid'] = 'inttime_year' # 一年内, inttime_all全部
-        # self.data['interation'] = ''
-        # self.data['interV'] = 'kKIOkrELjboJmLkElbYTkKIKmbELjbkRmLkElbk%3D_1893302304'
-        # self.data['tsn'] = 4
+        if time in self.tsn:
+            if time != 0:
+                self.data['sourceid'] = self.sourceid[-time]  # 一年内, inttime_all全部
+                self.data['interation'] = ''
+                self.data['interV'] = 'kKIOkrELjboJmLkElbYTkKIKmbELjbkRmLkElbk%3D_1893302304'
+                self.data['tsn'] = self.tsn[-time]
+        else:
+            pass # 自定义 默认为全部
 
         try:
             soup = self.get_info(self.wx_url, **self.data)
-            container = soup.find('body', class_='').find('div', class_="results").find_all('div', class_="wx-rb wx-rb3")
-            json_info = {}
+            container = soup.find('body', class_='').find('div', class_="results").find_all('div',
+                                                                                            class_="wx-rb wx-rb3")
+            json_info = []
             if container:
-                for j, i in enumerate(container):
+                for i in container:
                     jso = {}
                     jso['keywords'] = query
                     jso['title'] = i.find('div', class_='txt-box').find('a').get_text()
                     jso['url'] = i.find('div', class_="txt-box").find('a').get('href')
-                    text = self.get_text(i.find('div', class_="txt-box").find('a').get('href'))
-                    jso['details'] = text
-                    json_info[str(j)] = jso
-                print(json_info)
-
+                    # text = self.get_text(i.find('div', class_="txt-box").find('a').get('href'))
+                    # jso['details'] = text # 详情
+                    json_info.append(jso)
 
                     # info = []
                     # info.append(query)
@@ -70,22 +76,24 @@ class Sogou_Wechat(Sogou):
                     # info.append(i.find('div', class_='txt-box').find('p').get_text())  # 简介
                     # text = self.get_text(i.find('div', class_="txt-box").find('a').get('href'))
                     # info.append(text) #详情
-                    #print(json_info)
+                    # print(json_info)
 
-                    #多线程
-                    #result = self.mysql_insert(info)
+                    # 多线程
+                    # result = self.mysql_insert(info)
 
-                #
-                # pagebar_container = soup.find('div', attrs={'class': "p", 'id': "pagebar_container"})
-                # count = pagebar_container.find('div', class_='mun').find('resnum',
-                #     attrs={'id': 'scd_num'}).get_text().strip() # 总页数
+                pagebar_container = soup.find('div', attrs={'class': "p", 'id': "pagebar_container"})
+                count = pagebar_container.find('div', class_='mun').find('resnum',
+                                                                         attrs={
+                                                                             'id': 'scd_num'}).get_text().strip()  # 总条数
 
             else:
-                json_info = None # , None
-            return json_info # , count
+                json_info = []
+                count = 0
+            json_info.append(count)
+            return count, json.dumps(json_info, indent=1)  # 字典转换为json，并格式化
         except Exception, e:
-            return str(e)
-
+            print(str(e))
+            return
 
     def get_text(self, url):
         '''
@@ -93,7 +101,7 @@ class Sogou_Wechat(Sogou):
         :return: 获取text内容
         '''
         soup = self.get_info(url)
-        text = soup.find('div', attrs={'class':"rich_media_content ",'id':"js_content"}).get_text()
+        text = soup.find('div', attrs={'class': "rich_media_content ", 'id': "js_content"}).get_text()
         return text
 
     def mysql_insert(self, info):
@@ -110,13 +118,13 @@ class Sogou_Wechat(Sogou):
         return result
 
 
-
-
 if __name__ == '__main__':
     sogou = Sogou_Wechat()
     key_words = '联拓天际'
 
-    page = 3
-    result = sogou.get_html_info(key_words, page)
+    page = 5
+    time = 2
+    count, result = sogou.get_html_info(key_words, page)
+    # a = json.loads(result) # json转换为字典
+    print(count)
     print(result)
-
