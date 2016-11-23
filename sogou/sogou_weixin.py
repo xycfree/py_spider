@@ -9,6 +9,7 @@ from db_config import mysql_conn
 import sys
 from sogou import Sogou
 import json
+import datetime
 
 # from queue import Consumer, Producer
 reload(sys)
@@ -18,8 +19,7 @@ sys.setdefaultencoding('utf-8')
 class Sogou_Wechat(Sogou):
     def __init__(self):
         super(Sogou_Wechat, self).__init__()
-        self.sourceid = ('inttime_all', 'inttime_day', 'inttime_week', 'inttime_month', 'inttime_year')
-        self.tsn = (0, 1, 2, 3, 4)
+
         self.data = {
             'type': 2,
             # 'query': "广发银行",
@@ -38,13 +38,26 @@ class Sogou_Wechat(Sogou):
         else:
             print('无数据')
 
-    def get_html_info(self, query, page=1, time=0, site=100):
+    def get_html_info(self, query, page=1, time=0, startTime='',
+            endTime=datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), site=(100,)):
         '''
-        :param query: 搜索的关键词
-        :return: 返回第一页数据，总数据条数
+        :param query: 查询关坚持
+        :param page: 页数
+        :param time: 查询的时间段
+        :param site: 来源，站点
+        :return:
         '''
+        si = ''
+        for i in site:
+            if i in self.site_type.keys():
+                si += self.site_type[i] + '|'
+        si = si[:-1] if si else ''
+
+        #self.data['query'] = si + '"' + query + '"'  # 搜索的关键词，""不拆分关键词搜索
         self.data['query'] = '"' + query + '"'  # 搜索的关键词，""不拆分关键词搜索
         self.data['page'] = page
+
+
         if time in self.tsn:
             if time != 0:
                 self.data['sourceid'] = self.sourceid[-time]  # 一年内, inttime_all全部
@@ -52,7 +65,10 @@ class Sogou_Wechat(Sogou):
                 self.data['interV'] = 'kKIOkrELjboJmLkElbYTkKIKmbELjbkRmLkElbk%3D_1893302304'
                 self.data['tsn'] = self.tsn[-time]
         else:
-            pass # 自定义 默认为全部
+            # startTime
+            # endTime
+            pass  # 自定义 默认为全部
+
 
         try:
             soup = self.get_info(self.wx_url, **self.data)
@@ -89,11 +105,27 @@ class Sogou_Wechat(Sogou):
             else:
                 json_info = []
                 count = 0
-            json_info.append(count)
-            return count, json.dumps(json_info, indent=1)  # 字典转换为json，并格式化
+
+            #json_info = json.dumps(json_info, indent=1)
+            result={
+                'code': 0,
+                'msg': '成功',
+                'data': {
+                    'total': count,
+                    'result': json_info
+                }
+            }
+            return json.dumps(result, indent=1)   # count, json.dumps(json_info, indent=1)  # 字典转换为json，并格式化
         except Exception, e:
-            print(str(e))
-            return
+            result = {
+                'code': 1,
+                'msg': str(e),
+                'data': {
+                    'total': count,
+                    'result': json_info
+                }
+            }
+            return json.dumps(result, indent=1)
 
     def get_text(self, url):
         '''
@@ -124,7 +156,8 @@ if __name__ == '__main__':
 
     page = 5
     time = 2
-    count, result = sogou.get_html_info(key_words, page)
-    # a = json.loads(result) # json转换为字典
-    print(count)
+    site = ('101', '102')
+    result = sogou.get_html_info(query=key_words, page=page)
+    #result = json.loads(result) # json转换为字典
+    #print(result['data']['total'])
     print(result)

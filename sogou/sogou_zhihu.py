@@ -5,11 +5,10 @@
 # @Link    : http://example.org
 # @Version : $
 
-import os
+import datetime
 from sogou import Sogou
 import json
 import sys
-
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
@@ -21,11 +20,21 @@ class Sogou_zhihu(Sogou):
             'ie': 'utf-8'
         }
 
-    def get_html_info(self, query, page=1, time=0, site=100):
+    def get_html_info(self, query, page=1, time=0, startTime='',
+            endTime=datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), site=(100,)):
         '''
-        :param query: 搜索的关键词,默认第一页
-        :return: 返回第一页数据
+        :param query: 查询关坚持
+        :param page: 页数
+        :param time: 查询的时间段
+        :param site: 来源，站点
+        :return:
         '''
+        si = ''
+        for i in site:
+            if i in self.site_type.keys():
+                si += self.site_type[i] + '|'
+        si = si[:-1] if si else ''
+        # self.data['query'] = si + '"' + query + '"'  # 搜索的关键词，""不拆分关键词搜索
 
         self.data['query'] = '"' + query + '"'  # 搜索的关键词，""不拆分关键词搜索
         self.data['page'] = page
@@ -53,20 +62,35 @@ class Sogou_zhihu(Sogou):
                 if result_page:
                     if result_page[-1].get_text() == '下一页':
                         # 计算数据总条数，如果大于80条，则按80条处理，否则为 页数*10，可能会多
-                        sum = int(result_page[-2].get_text()) * 10
+                        count = int(result_page[-2].get_text()) * 10
                     else:
-                        sum = int(result_page[-1].get_text()) * 10
+                        count = int(result_page[-1].get_text()) * 10
                 else:
-                    sum = len(content_result)
+                    count = len(content_result)
 
             else:
                 json_info = []
-                sum = 0         # 如果没有值，要返回什么？？？
-            json_info.append(sum)
-            return sum, json.dumps(json_info, indent=1)  # , count  字典转换为json，并格式化
+                count = 0         # 如果没有值，要返回什么？？？
+
+            result = {
+                'code': 0,
+                'msg': '成功',
+                'data': {
+                    'total': count,
+                    'result': json_info
+                }
+            }
+            return json.dumps(result, indent=1)  # , count  字典转换为json，并格式化
         except Exception, e:
-            print(str(e))
-            return
+            result = {
+                'code': 1,
+                'msg': str(e),
+                'data': {
+                    'total': count,
+                    'result': json_info
+                }
+            }
+            return json.dumps(result, indent=1)
 
     #遍历页数与总条数
     def get_record_sum(self, query, page):
@@ -128,7 +152,7 @@ class Sogou_zhihu(Sogou):
 if __name__ == '__main__':
     query = '广发银行'
     page = 12
+    site = ('101', '102')
     zhihu = Sogou_zhihu()
-    sum,result = zhihu.get_html_info(query, page)
-    print(sum)
+    result = zhihu.get_html_info(query, page)
     print(result)
