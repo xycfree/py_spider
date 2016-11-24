@@ -20,12 +20,12 @@ class Sogou_zhihu(Sogou):
             'ie': 'utf-8'
         }
 
-    def get_html_info(self, query, page=1, time=0, startTime='',
+    def get_html_info(self, query, page=1, time_type=0, startTime='',
             endTime=datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), site=(100,)):
         '''
         :param query: 查询关坚持
         :param page: 页数
-        :param time: 查询的时间段
+        :param time_type: 查询的时间段
         :param site: 来源，站点
         :return:
         '''
@@ -50,7 +50,9 @@ class Sogou_zhihu(Sogou):
                     jso['keywords'] = query
                     jso['title'] = i.find('h4', class_='about-list-title').find('a').get_text()
                     jso['url'] = i.find('h4', class_="about-list-title").find('a').get('href')
-
+                    jso['intro'] = ''
+                    jso['website'] = '知乎'
+                    jso['time'] = ''
                     # text = self.get_text(i.find('h4', class_="about-list-title").find('a').get('href'))
                     # jso['details'] = text # 内容详情
                     json_info.append(jso)
@@ -86,8 +88,8 @@ class Sogou_zhihu(Sogou):
                 'code': 1,
                 'msg': str(e),
                 'data': {
-                    'total': count,
-                    'result': json_info
+                    'total': 0,
+                    'result': []
                 }
             }
             return json.dumps(result, indent=1)

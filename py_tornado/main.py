@@ -56,6 +56,7 @@ class MainHandler(tornado.web.RequestHandler):
 
 
 if __name__ == "__main__":
+
     tornado.options.parse_command_line()  # 解析
     app = tornado.web.Application(handlers=[
         (r'/', IndexHandlers),

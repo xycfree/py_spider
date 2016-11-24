@@ -10,6 +10,7 @@ import sys
 from sogou import Sogou
 import json
 import datetime
+import time
 
 # from queue import Consumer, Producer
 reload(sys)
@@ -38,12 +39,12 @@ class Sogou_Wechat(Sogou):
         else:
             print('无数据')
 
-    def get_html_info(self, query, page=1, time=0, startTime='',
+    def get_html_info(self, query, page=1, time_type=0, startTime='',
             endTime=datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), site=(100,)):
         '''
         :param query: 查询关坚持
         :param page: 页数
-        :param time: 查询的时间段
+        :param time_type: 查询的时间段
         :param site: 来源，站点
         :return:
         '''
@@ -56,20 +57,16 @@ class Sogou_Wechat(Sogou):
         #self.data['query'] = si + '"' + query + '"'  # 搜索的关键词，""不拆分关键词搜索
         self.data['query'] = '"' + query + '"'  # 搜索的关键词，""不拆分关键词搜索
         self.data['page'] = page
-
-
-        if time in self.tsn:
-            if time != 0:
-                self.data['sourceid'] = self.sourceid[-time]  # 一年内, inttime_all全部
+        if time_type in self.tsn:
+            if time_type != 0:
+                self.data['sourceid'] = self.sourceid[-time_type]  # 一年内, inttime_all全部
                 self.data['interation'] = ''
                 self.data['interV'] = 'kKIOkrELjboJmLkElbYTkKIKmbELjbkRmLkElbk%3D_1893302304'
-                self.data['tsn'] = self.tsn[-time]
+                self.data['tsn'] = self.tsn[-time_type]
         else:
             # startTime
             # endTime
             pass  # 自定义 默认为全部
-
-
         try:
             soup = self.get_info(self.wx_url, **self.data)
             container = soup.find('body', class_='').find('div', class_="results").find_all('div',
@@ -80,7 +77,13 @@ class Sogou_Wechat(Sogou):
                     jso = {}
                     jso['keywords'] = query
                     jso['title'] = i.find('div', class_='txt-box').find('a').get_text()
-                    jso['url'] = i.find('div', class_="txt-box").find('a').get('href')
+                    jso['url'] = i.find('div', class_="txt-box").find('a').get('href').encode('utf-8')
+                    jso['intro'] = i.find('div', class_='txt-box').find('p').get_text()
+                    jso['website'] = i.find('div', class_="txt-box").find('a', class_="wx-name").get('title')
+                    t = i.find('div', class_="txt-box").find('span', class_="time").find(
+                        'script').get_text()[-12:-2] .encode('utf-8')
+                    stamp = time.localtime(float(t)) # 时间戳转换为本地时间
+                    jso['time'] = time.strftime('%Y-%m-%d', stamp) # time.strftime('%Y-%m-%d %H:%M:%S',x)
                     # text = self.get_text(i.find('div', class_="txt-box").find('a').get('href'))
                     # jso['details'] = text # 详情
                     json_info.append(jso)
@@ -107,7 +110,7 @@ class Sogou_Wechat(Sogou):
                 count = 0
 
             #json_info = json.dumps(json_info, indent=1)
-            result={
+            result = {
                 'code': 0,
                 'msg': '成功',
                 'data': {
@@ -121,8 +124,8 @@ class Sogou_Wechat(Sogou):
                 'code': 1,
                 'msg': str(e),
                 'data': {
-                    'total': count,
-                    'result': json_info
+                    'total': 0,
+                    'result': []
                 }
             }
             return json.dumps(result, indent=1)
@@ -155,7 +158,7 @@ if __name__ == '__main__':
     key_words = '联拓天际'
 
     page = 5
-    time = 2
+    time_type = 2
     site = ('101', '102')
     result = sogou.get_html_info(query=key_words, page=page)
     #result = json.loads(result) # json转换为字典

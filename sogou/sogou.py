@@ -23,7 +23,7 @@ class Sogou(object):
         self.news_url = r'http://news.sogou.com/'  # 新闻
         self.zhihu_url = r'http://zhihu.sogou.com/zhihu'  # 知乎
         self.baidu_news_url = r'http://news.baidu.com/ns'  # 百度信息
-        self.baidu_tieba = r'http://tieba.baidu.com/f/search/res'  # 百度贴吧，全吧搜索
+        self.baidu_tieba_url = r'http://tieba.baidu.com/f/search/res'  # 百度贴吧，全吧搜索
         self.sourceid = ('inttime_all', 'inttime_day', 'inttime_week', 'inttime_month', 'inttime_year')
         self.tsn = (0, 1, 2, 3, 4)
         self.site_type = {
@@ -50,7 +50,7 @@ class Sogou(object):
 
     def get_info(self, url=None, *args, **kwargs):
         s = requests.session()
-        r = s.get(url, params=kwargs, headers=self.headers, timeout=6).content
+        r = s.get(url, params=kwargs, headers=self.headers, timeout=10).content
         soup = BeautifulSoup(r, 'lxml')
         return soup
 
