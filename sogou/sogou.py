@@ -24,6 +24,7 @@ class Sogou(object):
         self.zhihu_url = r'http://zhihu.sogou.com/zhihu'  # 知乎
         self.baidu_news_url = r'http://news.baidu.com/ns'  # 百度信息
         self.baidu_tieba_url = r'http://tieba.baidu.com/f/search/res'  # 百度贴吧，全吧搜索
+        self.tieba_base = r'http://tieba.baidu.com'
         self.sourceid = ('inttime_all', 'inttime_day', 'inttime_week', 'inttime_month', 'inttime_year')
         self.tsn = (0, 1, 2, 3, 4)
         self.site_type = {
@@ -34,6 +35,7 @@ class Sogou(object):
             '104': 'site:ifeng.com ',
             '105': 'site:163.com '
         }
+        # 需要对site做处理，101-105外为全部，如果是字符，则检查是否含有site:,如没有则补上site,然后进行搜索
         self.site = {'搜狐': 'site:sohu.com ',
                      '腾讯': 'site:qq.com ',
                      '新浪': 'site:sina.com.cn ',

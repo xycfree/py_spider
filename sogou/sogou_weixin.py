@@ -40,7 +40,7 @@ class Sogou_Wechat(Sogou):
             print('无数据')
 
     def get_html_info(self, query, page=1, time_type=0, startTime='',
-            endTime=datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), site=(100,)):
+            endTime=datetime.datetime.now().strftime('%Y-%m-%d'), site=(100,)):
         '''
         :param query: 查询关坚持
         :param page: 页数
@@ -57,59 +57,41 @@ class Sogou_Wechat(Sogou):
         #self.data['query'] = si + '"' + query + '"'  # 搜索的关键词，""不拆分关键词搜索
         self.data['query'] = '"' + query + '"'  # 搜索的关键词，""不拆分关键词搜索
         self.data['page'] = page
-        if time_type in self.tsn:
-            if time_type != 0:
-                self.data['sourceid'] = self.sourceid[-time_type]  # 一年内, inttime_all全部
-                self.data['interation'] = ''
-                self.data['interV'] = 'kKIOkrELjboJmLkElbYTkKIKmbELjbkRmLkElbk%3D_1893302304'
-                self.data['tsn'] = self.tsn[-time_type]
-        else:
-            # startTime
-            # endTime
-            pass  # 自定义 默认为全部
+        # if time_type in self.tsn:
+        #     if time_type != 0:
+        #         self.data['sourceid'] = self.sourceid[-time_type]  # 一年内, inttime_all全部
+        #         self.data['interation'] = ''
+        #         self.data['interV'] = 'kKIOkrELjboJmLkElbYTkKIKmbELjbkRmLkElbk%3D_1893302304'
+        #         self.data['tsn'] = self.tsn[-time_type]
+        # else:
+        #     # startTime
+        #     # endTime
+        #     pass  # 自定义 默认为全部
+
         try:
             soup = self.get_info(self.wx_url, **self.data)
-            container = soup.find('body', class_='').find('div', class_="results").find_all('div',
-                                                                                            class_="wx-rb wx-rb3")
+            container = soup.find('ul', class_="news-list")
             json_info = []
             if container:
-                for i in container:
+                for i in container.find_all('div', class_="txt-box"):
                     jso = {}
                     jso['keywords'] = query
-                    jso['title'] = i.find('div', class_='txt-box').find('a').get_text()
-                    jso['url'] = i.find('div', class_="txt-box").find('a').get('href').encode('utf-8')
-                    jso['intro'] = i.find('div', class_='txt-box').find('p').get_text()
-                    jso['website'] = i.find('div', class_="txt-box").find('a', class_="wx-name").get('title')
-                    t = i.find('div', class_="txt-box").find('span', class_="time").find(
-                        'script').get_text()[-12:-2] .encode('utf-8')
+                    jso['title'] = i.find('a').get_text()
+                    jso['url'] = i.find('a').get('href').encode('utf-8')
+                    jso['intro'] = i.find('p', class_="txt-info").get_text() if i.find(
+                            'p', class_="txt-info") else "暂无"
+                    jso['website'] = '微信'
+                    jso['wechat_name'] = i.find('a', class_="account").get_text()
+                    t = i.find('span', class_="s2").get_text()[-13:-3].encode('utf-8')
                     stamp = time.localtime(float(t)) # 时间戳转换为本地时间
                     jso['time'] = time.strftime('%Y-%m-%d', stamp) # time.strftime('%Y-%m-%d %H:%M:%S',x)
                     # text = self.get_text(i.find('div', class_="txt-box").find('a').get('href'))
                     # jso['details'] = text # 详情
                     json_info.append(jso)
 
-                    # info = []
-                    # info.append(query)
-                    # info.append(i.find('div', class_='txt-box').find('a').get_text())  # url标题
-                    # info.append(str(i.find('div', class_="txt-box").find('a').get('href')))  # url
-                    # info.append(i.find('div', class_='txt-box').find('p').get_text())  # 简介
-                    # text = self.get_text(i.find('div', class_="txt-box").find('a').get('href'))
-                    # info.append(text) #详情
-                    # print(json_info)
-
                     # 多线程
                     # result = self.mysql_insert(info)
-
-                pagebar_container = soup.find('div', attrs={'class': "p", 'id': "pagebar_container"})
-                count = pagebar_container.find('div', class_='mun').find('resnum',
-                                                                         attrs={
-                                                                             'id': 'scd_num'}).get_text().strip()  # 总条数
-
-            else:
-                json_info = []
-                count = 0
-
-            #json_info = json.dumps(json_info, indent=1)
+            count = soup.find('div', class_="mun").get_text()[3:-3] if soup.find('div', class_="mun") else 0 # 总条数
             result = {
                 'code': 0,
                 'msg': '成功',
@@ -118,7 +100,7 @@ class Sogou_Wechat(Sogou):
                     'result': json_info
                 }
             }
-            return json.dumps(result, indent=1)   # count, json.dumps(json_info, indent=1)  # 字典转换为json，并格式化
+            return json.dumps(result, indent=1) # 字典转换为json，并格式化
         except Exception, e:
             result = {
                 'code': 1,
@@ -155,12 +137,9 @@ class Sogou_Wechat(Sogou):
 
 if __name__ == '__main__':
     sogou = Sogou_Wechat()
-    key_words = '联拓天际'
-
-    page = 5
+    key_words = '广发银行'
+    page = 1
     time_type = 2
     site = ('101', '102')
     result = sogou.get_html_info(query=key_words, page=page)
-    #result = json.loads(result) # json转换为字典
-    #print(result['data']['total'])
     print(result)

@@ -31,7 +31,7 @@ class Baidu_news(sogou.Sogou):
             }
 
     def get_html_info(self, query, page=1, time=0, startTime='',
-                      endTime=datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), site=(100,)):
+                endTime=datetime.datetime.now().strftime('%Y-%m-%d'), site=(100,)):
         '''
         :param query: 关键词
         :param page: 页数
@@ -42,7 +42,7 @@ class Baidu_news(sogou.Sogou):
         :return:
         '''
         self.data['word'] = '"' + query + '"'
-        self.data['pn'] = (page - 1) * 20
+        self.data['pn'] = (int(page) - 1) * 20
         try:
             self.soup = self.get_info(self.baidu_news_url, **self.data)
             news_list = []

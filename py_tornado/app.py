@@ -63,10 +63,10 @@ class WechatHandler(tornado.web.RequestHandler):
     def get(self):
         self.query = self.get_argument('query', '启迪金控')
         self.page = self.get_argument('page', '1')
-        self.time = self.get_argument('time', '0')
+        self.time_type = self.get_argument('time_type', '0')
         self.site = self.get_argument('site', ('100'))
         self.wx = sogou_weixin.Sogou_Wechat()
-        result = self.wx.get_html_info(self.query, self.page, self.time, self.site)
+        result = self.wx.get_html_info(self.query, self.page, self.time_type, self.site)
         self.write(result)
 
         # result = json.loads(result)
@@ -84,10 +84,10 @@ class ZhihuHandler(tornado.web.RequestHandler):
     def get(self):
         self.query = self.get_argument('query', '启迪金控')
         self.page = self.get_argument('page', '1')
-        self.time = self.get_argument('time', '0')
+        self.time_type = self.get_argument('time_type', '0')
         self.site = self.get_argument('site', ('100'))
         self.zhihu = sogou_zhihu.Sogou_zhihu()
-        result = self.zhihu.get_html_info(self.query, self.page, self.time, self.site)
+        result = self.zhihu.get_html_info(self.query, self.page, self.time_type, self.site)
         self.write(result)
 
 

@@ -6,11 +6,17 @@
 # @Version : $
 
 import os
+
+import re
+
 from sogou import sogou
 import datetime
+import json
 import sys
+
 reload(sys)
 sys.setdefaultencoding('utf-8')
+
 
 class Baidu_tieba(sogou.Sogou):
     def __init__(self):
@@ -25,33 +31,33 @@ class Baidu_tieba(sogou.Sogou):
             'sd': '',
             'ed': '',
             'ie': 'utf-8',
-            #'pn': 4,
-            #'qw': '广发银行'
+            # 'pn': 4,
+            # 'qw': '广发银行'
         }
 
-    def get_html_info(self, query, page=1, time=0, startTime='',
-                endTime=datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), site=(100,)):
+    def get_html_info(self, query, page=1, time_type=0, startTime='',
+                endTime=datetime.datetime.now().strftime('%Y-%m-%d'), site=(100,)):
         '''
         :param query: 关键词
         :param page: 页数
-        :param time: 时间
+        :param time_type: 时间
         :param startTime: 自定义开始时间
         :param endTime: 自定义结束时间
         :param site: 站点
         :return:
         '''
         self.data['qw'] = '' + query + ''
-        #self.data['pn'] = page
+        self.data['pn'] = page
         try:
             self.soup = self.get_info(self.baidu_tieba_url, **self.data)
-            #print(self.soup)
             info_list = []
             tieba = self.soup.find('div', class_="s_post_list")
-            info_list = []
             if tieba:
                 s_post = tieba.find_all('div', class_='s_post')
                 for i in s_post:
                     info = {}
+                    if i.get('class')[0] == 's_post' and len(i.get('class')) != 1:
+                        continue
                     if i.find('p', class_="p_hot p_content"):
                         info['keywords'] = query
                         info['url'] = i.find('a', class_="bluelink").get('href')
@@ -61,44 +67,48 @@ class Baidu_tieba(sogou.Sogou):
                         tn = i.find('div', class_="p_show").get_text().split('/')
                         info['tieba_name'] = tn[0].strip()
                         info['time'] = tn[1].strip()
-                    elif i.find('div', attrs={'id':"no_head",'class':"s_post p_title  post_user clearfix"}):
-                        continue
                     else:
                         info['keywords'] = query
-                        print('hello')
-                        info['url'] = i.find('a', class_="bluelink").get('href')
-                        print(info['url'])
+                        t_url = i.find('a', class_="bluelink").get('href')
+                        info['url'] = self.tieba_base + t_url if self.tieba_base not in t_url else t_url
                         info['title'] = i.find('a', class_="bluelink").get_text()
-                        print(info['title'])
                         info['intro'] = i.find('div', class_="p_content").get_text()
-                        print(info['intro'])
                         info['website'] = '百度贴吧'
-                        info['tieba_name'] = i.find('a', class_="p_forum")#.find('font', class_="p_violet").get_text()
-                        print(info['tieba_name'])
-                    #print(info)
+                        info['tieba_name'] = i.find_all('font', class_="p_violet")[0].get_text()
+                        info['author'] = i.find_all('font', class_="p_violet")[1].get_text()
+                        info['time'] = i.find('font', class_="p_green p_date").get_text()
+                    info_list.append(info)
 
+            counts = self.soup.find('span', class_='s_nav_right hasPage')
+            count = counts.get_text().split('，')[1][8:-1] if counts else 0
+            # class ="s_nav_right hasPage" > 百度一下，找到相关贴吧贴子177407篇，用时0.417秒
+            result = {
+                'code': 0,
+                'msg': '成功',
+                'data': {
+                    'total': count,
+                    'result': info_list
+                }
+            }
 
-
-
-            else:
-                pass
-
-
-
-            return 'true'
+            return json.dumps(result, indent=1)
 
         except Exception, e:
-            return str(e)
+            result = {
+                'code': 1,
+                'msg': str(e),
+                'data': {
+                    'total': 0,
+                    'result': []
+                }
+            }
+            return json.dumps(result, indent=1)
+
+
 if __name__ == '__main__':
-    query = '广发银行'
-    page = 2
+    query = '张家口'
+    page = 1
+
     tieba = Baidu_tieba()
     result = tieba.get_html_info(query, page)
     print(result)
-
-
-
-
-
-
-

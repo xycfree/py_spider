@@ -12,7 +12,6 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
-
 class Sogou_zhihu(Sogou):
     def __init__(self):
         super(Sogou_zhihu, self).__init__()
@@ -21,7 +20,7 @@ class Sogou_zhihu(Sogou):
         }
 
     def get_html_info(self, query, page=1, time_type=0, startTime='',
-            endTime=datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), site=(100,)):
+            endTime=datetime.datetime.now().strftime('%Y-%m-%d'), site=(100,)):
         '''
         :param query: 查询关坚持
         :param page: 页数
