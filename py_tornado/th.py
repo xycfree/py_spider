@@ -7,51 +7,68 @@
 
 import os
 import threading
-from main import MainHandler
-import sys
+import json
 
+from sogou import sogou_weixin, sogou_zhihu
+from baidu import baidu_news, baidu_tieba
+import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
-result = {}
 
 
 class Th(threading.Thread):
-    def __init__(self, a, b, c):
-        super(Th, self).__init__()
-        self.a = int(a)
-        self.b = int(b)
-        self.c = int(c)
 
-        self.wx = aa(self.a, self.b, self.c)
-        self.zh = bb(self.a, self.b, self.c)
-        self.news = cc(self.a, self.b, self.c)
-        self.tieba = dd(self.a, self.b, self.c)
+    def __init__(self,query,page=1,time_type=0,site=(100,)):
+        super(Th,self).__init__()
+        self.query = query
+        self.page = page
+        self.time_type = time_type
+        self.site = site
+
+        self.wx = self.get_wx_info(self.query, self.page, self.time_type, self.site)
+        self.zh = self.get_zh_info(self.query, self.page, self.time_type, self.site)
+        self.news = self.get_bd_news_info(self.query, self.page, self.time_type, self.site)
+        self.tieba = self.get_bd_tieba_info(self.query, self.page, self.time_type, self.site)
 
     def run(self):
-        result[self.wx] = self.wx
-        result[self.zh] = self.zh
-        result[self.news] = self.news
-        result[self.tieba] = self.tieba
+        global results
+        results = []
+        results.append(self.wx)
+        results.append(self.zh)
+        results.append(self.news)
+        results.append(self.tieba)
 
+    #print('results:{}'.format(results))
+    #res = results
+    #results = []
 
-def aa(aa, b, c):
-    return aa + b + c
+    def stop(self):
+        self.stopped = True
 
+    def cls(self):
+        results = []
 
-def bb(aa, b, c):
-    return (aa + b + c) * 2
+    def get_wx_info(self, query, page, time_type, site):
+        self.weixin = sogou_weixin.Sogou_Wechat()
+        result = json.loads(self.weixin.get_html_info(query, page, time_type, site))
+        return result
 
+    def get_zh_info(self, query, page, time_type, site):
+        self.zhihu = sogou_zhihu.Sogou_zhihu()
+        result = json.loads(self.zhihu.get_html_info(query, page, time_type, site))
+        return result
 
-def cc(aa, b, c):
-    return (aa + b + c) * 4
+    def get_bd_news_info(self, query, page, time_type, site):
+        self.news = baidu_news.Baidu_news()
+        result = json.loads(self.news.get_html_info(query, page, time_type, site))
+        return result
 
-
-def dd(aa, b, c):
-    return (aa + b + c) * 8
-
+    def get_bd_tieba_info(self, query, page, time_type, site):
+        self.tieba = baidu_tieba.Baidu_tieba()
+        result = json.loads(self.tieba.get_html_info(query, page, time_type, site))
+        return result
 
 if __name__ == '__main__':
-    print aa(11, 33, 33)
     t = Th(3, 5, 2)
     t.start()
-    print(result)
+    print(results)

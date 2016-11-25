@@ -52,7 +52,6 @@ class Baidu_news(sogou.Sogou):
                 n['keywords'] = query # 关键词
                 n['url'] = new.a.get('href') #.encode("utf-8") # 取出新闻链接地址
                 n['title'] = new.a.get_text() #标题
-                #print(n['title'])
                 m = new.find('p', class_='c-author').get_text().encode('utf-8').strip() # 取出新闻来源和时间
                 #m = m.replace('  ', ',')
                 source = re.split('  ', m)

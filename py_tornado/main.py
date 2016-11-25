@@ -9,15 +9,13 @@ import tornado.httpserver
 from tornado import ioloop, web
 import tornado.options
 from tornado.options import options, define
-from sogou import sogou_weixin, sogou_zhihu
-from baidu import baidu_news, baidu_tieba
 import json
 import re
-import threading
-
+import th
+from th import Th
 define('port', default=8000, type=int)
 
-results = {}
+
 
 class IndexHandlers(tornado.web.RequestHandler):
     def get(self):
@@ -27,6 +25,7 @@ class IndexHandlers(tornado.web.RequestHandler):
 
 
 class MainHandler(tornado.web.RequestHandler):
+
     def get(self):
         self.query = self.get_argument('query', '启迪金控')
         self.page = self.get_argument('page', '1')
@@ -46,10 +45,44 @@ class MainHandler(tornado.web.RequestHandler):
         # threads += [wx,zh,news,tieba]
         # for t in threads:
         #     t.start()
-
+        print('thread start ....')
         t = Th(self.query, self.page, self.time_type, self.site)
+        t.setDaemon(True)
         t.start()
-        print(t.name)
+        res = th.results
+        print(len(res))
+        print(res)
+        t.cls()
+        results = {}
+        if len(res):
+            if res[0]['code']==0 or res[1]['code']==0 or res[2]['code']==0 or res[3]['code']==0:
+                results['code'] = 0
+                results['msg'] = '成功'
+                results['data'] = {}
+                results['data']['total'] = 0
+                results['data']['result'] = []
+                for i in res:
+                    results['data']['total'] += int(re.sub(',', '', str(i['data']['total'])))
+                    results['data']['result'] += i['data']['result']
+            else:
+                results['code'] = 1
+                results['msg'] = res[0]['msg']
+                results['data'] = {}
+                results['data']['total'] = 0
+                results['data']['result'] = []
+
+        else:
+            results['code'] = 0
+            results['msg'] = '成功'
+            results['data'] = {}
+            results['data']['total'] = 0
+            results['data']['result'] = []
+        # th.res = []
+        # th.results = []
+
+        self.write(json.dumps(results))
+
+        #return json.dumps(results, indent=1)
 
 
         # wx = self.get_wx_info(self.query, self.page, self.time_type, self.site)
@@ -81,50 +114,7 @@ class MainHandler(tornado.web.RequestHandler):
         # # return json.dumps(result)
         # self.write(json.dumps(result))
 
-        self.write(json.dumps(results))
 
-
-
-
-
-
-class Th(threading.Thread):
-    def __init__(self,query,page=1,time_type=0,site=(100,)):
-        super(Th,self).__init__()
-        self.query = query
-        self.page = page
-        self.time_type = time_type
-        self.site = site
-        self.wx = self.get_wx_info(self.query, self.page, self.time_type, self.site)
-        self.zh = self.get_zh_info(self.query, self.page, self.time_type, self.site)
-        self.news = self.get_bd_news_info(self.query, self.page, self.time_type, self.site)
-        self.tieba = self.get_bd_tieba_info(self.query, self.page, self.time_type, self.site)
-
-    def run(self):
-        results['wx'] = self.wx
-        results['zh'] = self.zh
-        results['news'] = self.news
-        results['tieba'] = self.tieba
-
-    def get_wx_info(self, query, page, time_type, site):
-        self.weixin = sogou_weixin.Sogou_Wechat()
-        result = json.loads(self.weixin.get_html_info(query, page, time_type, site))
-        return result
-
-    def get_zh_info(self, query, page, time_type, site):
-        self.zhihu = sogou_zhihu.Sogou_zhihu()
-        result = json.loads(self.zhihu.get_html_info(query, page, time_type, site))
-        return result
-
-    def get_bd_news_info(self, query, page, time_type, site):
-        self.news = baidu_news.Baidu_news()
-        result = json.loads(self.news.get_html_info(query, page, time_type, site))
-        return result
-
-    def get_bd_tieba_info(self, query, page, time_type, site):
-        self.tieba = baidu_tieba.Baidu_tieba()
-        result = json.loads(self.tieba.get_html_info(query, page, time_type, site))
-        return result
 
 if __name__ == "__main__":
     tornado.options.parse_command_line()  # 解析
