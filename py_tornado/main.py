@@ -13,8 +13,8 @@ import json
 import re
 import th
 from th import Th
-define('port', default=8000, type=int)
 
+define('port', default=8000, type=int)
 
 
 class IndexHandlers(tornado.web.RequestHandler):
@@ -25,7 +25,6 @@ class IndexHandlers(tornado.web.RequestHandler):
 
 
 class MainHandler(tornado.web.RequestHandler):
-
     def get(self):
         self.query = self.get_argument('query', '启迪金控')
         self.page = self.get_argument('page', '1')
@@ -51,11 +50,11 @@ class MainHandler(tornado.web.RequestHandler):
         t.start()
         res = th.results
         print(len(res))
-        print(res)
-        t.cls()
+        print(json.dumps(res, indent=1))
+        #t.cls()
         results = {}
         if len(res):
-            if res[0]['code']==0 or res[1]['code']==0 or res[2]['code']==0 or res[3]['code']==0:
+            if res[0]['code'] == 0 or res[1]['code'] == 0 or res[2]['code'] == 0 or res[3]['code'] == 0:
                 results['code'] = 0
                 results['msg'] = '成功'
                 results['data'] = {}
@@ -82,7 +81,7 @@ class MainHandler(tornado.web.RequestHandler):
 
         self.write(json.dumps(results))
 
-        #return json.dumps(results, indent=1)
+        # return json.dumps(results, indent=1)
 
 
         # wx = self.get_wx_info(self.query, self.page, self.time_type, self.site)
@@ -113,7 +112,6 @@ class MainHandler(tornado.web.RequestHandler):
         #     result['data']['result'] = []
         # # return json.dumps(result)
         # self.write(json.dumps(result))
-
 
 
 if __name__ == "__main__":

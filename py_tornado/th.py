@@ -12,14 +12,14 @@ import json
 from sogou import sogou_weixin, sogou_zhihu
 from baidu import baidu_news, baidu_tieba
 import sys
+
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
 
 class Th(threading.Thread):
-
-    def __init__(self,query,page=1,time_type=0,site=(100,)):
-        super(Th,self).__init__()
+    def __init__(self, query, page=1, time_type=0, site=(100,)):
+        super(Th, self).__init__()
         self.query = query
         self.page = page
         self.time_type = time_type
@@ -38,9 +38,6 @@ class Th(threading.Thread):
         results.append(self.news)
         results.append(self.tieba)
 
-    #print('results:{}'.format(results))
-    #res = results
-    #results = []
 
     def stop(self):
         self.stopped = True
@@ -67,6 +64,7 @@ class Th(threading.Thread):
         self.tieba = baidu_tieba.Baidu_tieba()
         result = json.loads(self.tieba.get_html_info(query, page, time_type, site))
         return result
+
 
 if __name__ == '__main__':
     t = Th(3, 5, 2)

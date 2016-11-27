@@ -137,7 +137,7 @@ class Sogou_Wechat(Sogou):
 
 if __name__ == '__main__':
     sogou = Sogou_Wechat()
-    key_words = '广发银行'
+    key_words = '北京银行'
     page = 1
     time_type = 2
     site = ('101', '102')

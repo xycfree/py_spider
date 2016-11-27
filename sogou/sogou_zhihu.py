@@ -52,6 +52,7 @@ class Sogou_zhihu(Sogou):
                     jso['intro'] = ''
                     jso['website'] = '知乎'
                     jso['time'] = ''
+                    #print('{0},{1},{2}'.format(jso['title'],jso['url'],jso['intro']))
                     # text = self.get_text(i.find('h4', class_="about-list-title").find('a').get('href'))
                     # jso['details'] = text # 内容详情
                     json_info.append(jso)
@@ -59,8 +60,9 @@ class Sogou_zhihu(Sogou):
                     # 多线程
                     # result = self.mysql_insert(info)
 
-                result_page = soup.find('div', class_="result-page").find('ul').find_all('li')
-                if result_page:
+                _page = soup.find('div', class_="result-page")
+                if _page:
+                    result_page = _page.find('ul').find_all('li')
                     if result_page[-1].get_text() == '下一页':
                         # 计算数据总条数，如果大于80条，则按80条处理，否则为 页数*10，可能会多
                         count = int(result_page[-2].get_text()) * 10
@@ -151,8 +153,8 @@ class Sogou_zhihu(Sogou):
 
 
 if __name__ == '__main__':
-    query = '广发银行'
-    page = 12
+    query = '甘肃银行'
+    page = 1
     site = ('101', '102')
     zhihu = Sogou_zhihu()
     result = zhihu.get_html_info(query, page)
