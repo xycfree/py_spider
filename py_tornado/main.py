@@ -76,7 +76,8 @@ class MainHandler(tornado.web.RequestHandler):
             results['data']['total'] = 0
             results['data']['result'] = []
 
-        self.write(json.dumps(results))
+        self.write(json.dumps(results,indent=1,ensure_ascii=False))
+        #json.dumps 序列化时对中文默认使用的ascii编码.想输出真正的中文需要指定ensure_ascii=False：
 
         # return json.dumps(results, indent=1)
 
