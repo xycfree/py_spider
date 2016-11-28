@@ -6,6 +6,9 @@
 # @Version : $
 
 import datetime
+
+import re
+
 from sogou import Sogou
 import json
 import sys
@@ -52,12 +55,14 @@ class Sogou_zhihu(Sogou):
                     jso['keywords'] = query
                     jso['title'] = i.find('h4', class_='about-list-title').find('a').get_text()
                     jso['url'] = i.find('h4', class_="about-list-title").find('a').get('href')
-                    jso['intro'] = ''
+                    #jso['intro'] = ''
                     jso['website'] = '知乎'
                     jso['time'] = ''
                     # print('{0},{1},{2}'.format(jso['title'],jso['url'],jso['intro']))
-                    # text = self.get_text(i.find('h4', class_="about-list-title").find('a').get('href'))
-                    # jso['details'] = text # 内容详情
+                    text = self.get_text_info(i.find('h4', class_="about-list-title").find('a').get('href'))
+                    #jso['details'] = text # 内容详情
+
+                    jso['intro'] = re.sub(re.compile('\n|显示全部|…'), '', text['intro'].strip())
                     json_info.append(jso)
 
                     # 多线程
@@ -85,7 +90,7 @@ class Sogou_zhihu(Sogou):
                     'result': json_info
                 }
             }
-            return json.dumps(result, indent=1)  # , count  字典转换为json，并格式化
+            return json.dumps(result, indent=1,ensure_ascii=False)  # , count  字典转换为json，并格式化
         except Exception, e:
             result = {
                 'code': 1,
@@ -114,21 +119,19 @@ class Sogou_zhihu(Sogou):
         except Exception, e:
             return
 
-    def get_text(self, url):
+    def get_text_info(self, url):
         '''
         :param url: 访问的url地址
         :return: 获取text内容
         '''
         detail_info = {}
-
         soup = self.get_info(url)
-        title = soup.find('div', attrs={'id': "zh-question-title", 'data-editable': "false"}).find(
-            'h2', class_='zm-item-title').find('span', class_="zm-editable-content").get_text()
+        title = soup.find('span', class_="zm-editable-content").get_text()
         detail_info['title'] = title  # 标题
 
-        text = soup.find('div', attrs={'id': "zh-question-detail", 'class': "zm-item-rich-text"}).find(
-            'div', class_="zm-editable-content").get_text()
-        detail_info['text'] = text  # 内容
+        intro = soup.find('div', class_="zh-summary summary clearfix").get_text() if soup.find(
+            'div', class_="zh-summary summary clearfix") else ''
+        detail_info['intro'] = intro  # 内容
 
         answer = soup.find('div', attrs={'id': "zh-question-answer-wrap", 'class': "zh-question-answer-wrapper"})
         answer_head = answer.find_all('div', class_="answer-head")  # auther
@@ -151,7 +154,7 @@ class Sogou_zhihu(Sogou):
 
 
 if __name__ == '__main__':
-    query = '品尚汇仁'
+    query = '品尚'
     page = 1
     site = ('101', '102')
     zhihu = Sogou_zhihu()
