@@ -23,7 +23,6 @@ class IndexHandlers(tornado.web.RequestHandler):
 
         self.write('hello tornado!')
 
-
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
         self.query = self.get_argument('query', '启迪金控')
@@ -48,10 +47,10 @@ class MainHandler(tornado.web.RequestHandler):
         t = Th(self.query, self.page, self.time_type, self.site)
         t.setDaemon(True)
         t.start()
+        #t.join()
         res = th.results
-        print(len(res))
-        print(json.dumps(res, indent=1))
-        #t.cls()
+        #print(len(res))
+        #print(json.dumps(res, indent=1))
         results = {}
         if len(res):
             if res[0]['code'] == 0 or res[1]['code'] == 0 or res[2]['code'] == 0 or res[3]['code'] == 0:
@@ -76,8 +75,6 @@ class MainHandler(tornado.web.RequestHandler):
             results['data'] = {}
             results['data']['total'] = 0
             results['data']['result'] = []
-        # th.res = []
-        # th.results = []
 
         self.write(json.dumps(results))
 
