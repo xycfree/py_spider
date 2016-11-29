@@ -5,12 +5,14 @@
 # @Link    : http://example.org
 # @Version : $
 
-import os
+import sys
+
 import MySQLdb
 from DBUtils.PooledDB import PooledDB
 from MySQLdb.cursors import DictCursor
+
 import config
-import sys
+
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
@@ -201,3 +203,6 @@ class Mysql(object):
             self.end('rollback')
         self._cursor.close()
         self._conn.close()
+
+if __name__ == '__main__':
+    pass

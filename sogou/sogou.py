@@ -5,12 +5,13 @@
 # @Link    : http://example.org
 # @Version : $
 
-import os
+import sys
+from random import randint
+
 import requests
 from bs4 import BeautifulSoup
-from config import UserAgent
-from random import randint
-import sys
+
+from py_spider.config.useragent_config import UserAgent
 
 reload(sys)
 sys.setdefaultencoding('utf-8')

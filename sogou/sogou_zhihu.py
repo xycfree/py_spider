@@ -12,11 +12,11 @@ import re
 from sogou import Sogou
 import json
 import sys
-
+from py_spider.config.log_info import Logger
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
-
+logger = Logger()
 class Sogou_zhihu(Sogou):
     def __init__(self):
         super(Sogou_zhihu, self).__init__()
@@ -44,6 +44,7 @@ class Sogou_zhihu(Sogou):
         self.data['page'] = int(page)
 
         try:
+            logger.info('get_html_info methods...')
             soup = self.get_info(self.zhihu_url, **self.data)
             box_result = soup.find('div', class_='zhihu-warp').find('div', class_='result-content').find('div',
                                                                                                          class_="box-result")
@@ -60,10 +61,11 @@ class Sogou_zhihu(Sogou):
                     jso['time'] = ''
                     # print('{0},{1},{2}'.format(jso['title'],jso['url'],jso['intro']))
                     text = self.get_text_info(i.find('h4', class_="about-list-title").find('a').get('href'))
-                    #jso['details'] = text # 内容详情
-
                     jso['intro'] = re.sub(re.compile('\n|显示全部|…'), '', text['intro'].strip())
+                    jso['answer'] = text['answer']
+
                     json_info.append(jso)
+
 
                     # 多线程
                     # result = self.mysql_insert(info)
@@ -92,6 +94,7 @@ class Sogou_zhihu(Sogou):
             }
             return json.dumps(result, indent=1,ensure_ascii=False)  # , count  字典转换为json，并格式化
         except Exception, e:
+            logger.error('异常信息:{}'.format(e))
             result = {
                 'code': 1,
                 'msg': str(e),
@@ -131,11 +134,11 @@ class Sogou_zhihu(Sogou):
 
         intro = soup.find('div', class_="zh-summary summary clearfix").get_text() if soup.find(
             'div', class_="zh-summary summary clearfix") else ''
-        detail_info['intro'] = intro  # 内容
+        detail_info['intro'] = intro  # 问题内容
 
         answer = soup.find('div', attrs={'id': "zh-question-answer-wrap", 'class': "zh-question-answer-wrapper"})
-        answer_head = answer.find_all('div', class_="answer-head")  # auther
-        answer_text = answer.find_all('div', class_='zm-editable-content clearfix')  # answer text
+        answer_head = answer.find_all('div', class_="answer-head")  # 回答作者
+        answer_text = answer.find_all('div', class_='zm-editable-content clearfix')  # 回答内容
         if answer_head:
             info_list = []
             for i, j in zip(answer_head, answer_text):
@@ -144,8 +147,8 @@ class Sogou_zhihu(Sogou):
                 # print(j.get_text())
                 info = {}
                 info['author'] = i.find('a', class_="author-link").get_text() if \
-                    i.find('a', class_="author-link") else i.find('span', class_='name').get_text()
-                info['content'] = j.get_text()
+                    i.find('a', class_="author-link") else i.find('span', class_='name').get_text() # 作者
+                info['content'] = re.sub(re.compile('\n'), '', j.get_text().strip())  # 回答内容
                 info_list.append(info)
             detail_info['answer'] = info_list
         else:
@@ -154,7 +157,7 @@ class Sogou_zhihu(Sogou):
 
 
 if __name__ == '__main__':
-    query = '品尚'
+    query = '启迪金控'
     page = 1
     site = ('101', '102')
     zhihu = Sogou_zhihu()
